@@ -143,9 +143,6 @@ foreign user32 {
 	GetDCEx     :: proc(hWnd: HWND, hrgnClip: HRGN, flags: DWORD) -> HDC ---
 	ReleaseDC   :: proc(hWnd: HWND, hDC: HDC) -> INT ---
 
-	GetDlgCtrlID :: proc(hWnd: HWND) -> INT ---
-	GetDlgItem   :: proc(hDlg: HWND, nIDDlgItem: INT) -> HWND ---
-
 	CreateMenu             :: proc() -> HMENU ---
 	CreatePopupMenu        :: proc() -> HMENU ---
 	DeleteMenu             :: proc(hMenu: HMENU, uPosition: UINT, uFlags: UINT) -> BOOL ---
@@ -747,6 +744,7 @@ RT_PLUGPLAY     :: LPWSTR(uintptr(0x00000013))
 RT_VXD          :: LPWSTR(uintptr(0x00000014))
 RT_ANICURSOR    :: LPWSTR(uintptr(0x00000015))
 RT_ANIICON      :: LPWSTR(uintptr(0x00000016))
+RT_HTML         :: LPWSTR(uintptr(0x00000017))
 RT_MANIFEST     :: LPWSTR(uintptr(0x00000018))
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID                 :: LPWSTR(uintptr(0x00000001))
@@ -1083,3 +1081,94 @@ COPYDATASTRUCT :: struct {
 }
 
 PCOPYDATASTRUCT :: ^COPYDATASTRUCT
+
+//
+// Dialog Manager
+//
+
+DLGPROC :: #type proc "system" (hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> INT_PTR
+
+DLGTEMPLATE :: struct #packed {
+	style:            DWORD,
+	dxExtendedStyle:  DWORD,
+	cdit:             WORD,
+	x:                c_short,
+	y:                c_short,
+	c_x:              c_short,
+	c_y:              c_short,
+}
+
+DLGITEMTEMPLATE :: struct #packed {
+	style:            DWORD,
+	dwExtendedStyle:  DWORD,
+	x:                c_short,
+	y:                c_short,
+	cx:               c_short,
+	cy:               c_short,
+	id:               WORD,
+}
+
+DIALOG_CONTROL_DPI_CHANGE_BEHAVIORS :: enum c_int {
+	DCDC_DEFAULT                  = 0x0000,
+	DCDC_DISABLE_FONT_UPDATE      = 0x0001,
+	DCDC_DISABLE_RELAYOUT         = 0x0002,
+}
+
+DIALOG_DPI_CHANGE_BEHAVIORS :: enum c_int {
+	DDC_DEFAULT                   = 0x0000,
+	DDC_DISABLE_ALL               = 0x0001,
+	DDC_DISABLE_RESIZE            = 0x0002,
+	DDC_DISABLE_CONTROL_RELAYOUT  = 0x0004,
+}
+
+// Window extra bytes (WNDCLASSW.cbWndExtra) needed for private dialog classes.
+DLGWINDOWEXTRA :: 30
+
+@(default_calling_convention="system")
+foreign user32 {
+	CreateDialogParamW          :: proc(hInstance: HINSTANCE, lpTemplateName: LPCWSTR, hWndParent: HWND, lpDialogFunc: DLGPROC, dwInitParam: LPARAM) -> HWND ---
+	CreateDialogIndirectParamW  :: proc(hInstance: HINSTANCE, lpTemplate: ^DLGTEMPLATE, hWndParent: HWND, lpDialogFunc: DLGPROC, dwInitParam: LPARAM) -> HWND ---
+
+	DialogBoxParamW             :: proc(hInstance: HINSTANCE, lpTemplateName: LPCWSTR, hWndParent: HWND, lpDialogFunc: DLGPROC, dwInitParam: LPARAM) -> INT_PTR ---
+	DialogBoxIndirectParamW     :: proc(hInstance: HINSTANCE, hDialogTemplate: ^DLGTEMPLATE, hWndParent: HWND, lpDialogFunc: DLGPROC, dwInitParam: LPARAM) -> INT_PTR ---
+
+	EndDialog                   :: proc(hDlg: HWND, nResult: INT_PTR) -> BOOL ---
+	GetDlgItem                  :: proc(hDlg: HWND, nIDDlgItem: INT) -> HWND ---
+	SetDlgItemInt               :: proc(hDlg: HWND, nIDDlgItem: c_int, uValue: UINT, bSigned: BOOL) -> BOOL ---
+	GetDlgItemInt               :: proc(hDlg: HWND, nIDDlgItem: c_int, lpTranslated: ^BOOL, bSigned: BOOL) -> UINT ---
+	SetDlgItemTextW             :: proc(hDlg: HWND, nIDDlgItem: c_int, lpString: LPCWSTR) -> BOOL ---
+	GetDlgItemTextW             :: proc(hDlg: HWND, nIDDlgItem: c_int, lpString: LPWSTR, cchMax: c_int) -> UINT ---
+	CheckDlgButton              :: proc(hDlg: HWND, nIDButton: c_int, uCheck: UINT) -> BOOL ---
+	CheckRadioButton            :: proc(hDlg: HWND, nIDFirstButton: c_int, nIDLastButton: c_int, nIDCheckButton: c_int) -> BOOL ---
+	IsDlgButtonChecked          :: proc(hDlg: HWND, nIDButton: c_int) -> UINT ---
+	SendDlgItemMessageW         :: proc(hDlg: HWND, nIDDlgItem: c_int, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> LRESULT ---
+	GetNextDlgGroupItem         :: proc(hDlg: HWND, hCtl: HWND, bPrevious: BOOL) -> HWND ---
+	GetNextDlgTabItem           :: proc(hDlg: HWND, hCtl: HWND, bPrevious: BOOL) -> HWND ---
+	GetDlgCtrlID                :: proc(hWnd: HWND) -> INT ---
+	GetDialogBaseUnits          :: proc() -> c_long ---
+
+	DefDlgProcA                 :: proc(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> LRESULT ---
+	DefDlgProcW                 :: proc(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) -> LRESULT ---
+
+	SetDialogControlDpiChangeBehavior :: proc(hWnd: HWND, mask: DIALOG_CONTROL_DPI_CHANGE_BEHAVIORS, values: DIALOG_CONTROL_DPI_CHANGE_BEHAVIORS) -> BOOL ---
+	GetDialogControlDpiChangeBehavior :: proc(hWnd: HWND) -> DIALOG_CONTROL_DPI_CHANGE_BEHAVIORS ---
+
+	SetDialogDpiChangeBehavior        :: proc(hDlg: HWND, mask: DIALOG_DPI_CHANGE_BEHAVIORS, values: DIALOG_DPI_CHANGE_BEHAVIORS) -> BOOL ---
+	GetDialogDpiChangeBehavior        :: proc(hDlg: HWND) -> DIALOG_DPI_CHANGE_BEHAVIORS ---
+}
+
+CreateDialogW :: #force_inline proc "system" (hInstance: HINSTANCE, lpTemplateName: LPCWSTR, hWndParent: HWND, lpDialogFunc: DLGPROC) -> HWND {
+	return CreateDialogParamW(hInstance, lpTemplateName, hWndParent, lpDialogFunc, 0)
+}
+
+CreateDialogIndirectW :: #force_inline proc "system" (hInstance: HINSTANCE, lpTemplate: ^DLGTEMPLATE, hWndParent: HWND, lpDialogFunc: DLGPROC) -> HWND {
+	return CreateDialogIndirectParamW(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0)
+}
+
+DialogBoxW :: #force_inline proc "system" (hInstance: HINSTANCE, lpTemplateName: LPCWSTR, hWndParent: HWND, lpDialogFunc: DLGPROC) -> INT_PTR {
+	return DialogBoxParamW(hInstance, lpTemplateName, hWndParent, lpDialogFunc, 0)
+}
+
+DialogBoxIndirectW :: #force_inline proc "system" (hInstance: HINSTANCE, hDialogTemplate: ^DLGTEMPLATE, hWndParent: HWND, lpDialogFunc: DLGPROC) -> INT_PTR {
+	return DialogBoxIndirectParamW(hInstance, hDialogTemplate, hWndParent, lpDialogFunc, 0)
+}
