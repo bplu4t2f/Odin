@@ -345,6 +345,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Persist apt package archives across runs because the apt package servers can be slow.
+      # On a cache miss, actions/cache saves the configured .deb files at job completion.
+      # It restores the exact key if available, otherwise one cache matching the restore-key prefix.
+      # Cache entries are immutable, so an exact-key hit will not be updated with new archives.
+      # The cache action runs as the runner user, so we use a runner-writable directory
+      # "$RUNNER_TEMP/apt-cache/", and copy archives to (and later from) apt's root-owned
+      # "/var/cache/apt/archives" directory.
       - name: Cache apt package archives
         uses: actions/cache@v4
         with:
@@ -374,6 +381,7 @@ jobs:
       - name: Install riscv64 toolchain and qemu
         run: sudo apt-get install -y qemu-user qemu-user-static gcc-12-riscv64-linux-gnu libc6-riscv64-cross
 
+      # Need to save all downloaded apt packages in "$RUNNER_TEMP/apt-cache/" so that actions/checkout@v4 will pick them up
       - name: Save apt package archives
         run: sudo cp /var/cache/apt/archives/*.deb "$RUNNER_TEMP/apt-cache/"
 
