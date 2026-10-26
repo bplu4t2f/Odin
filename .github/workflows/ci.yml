@@ -116,9 +116,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/apt-cache/*.deb
-          key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ steps.apt-cache-week.outputs.week }}-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-matrix-apt-${{ steps.apt-cache-week.outputs.week }}-${{ hashFiles('.github/workflows/ci.yml') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-apt-
+            ${{ runner.os }}-${{ runner.arch }}-matrix-apt-
 
       - name: Restore apt package archives
         if: matrix.os != 'macos-latest'
@@ -410,9 +410,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/apt-cache/*.deb
-          key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ steps.apt-cache-week.outputs.week }}-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-riscv64-apt-${{ steps.apt-cache-week.outputs.week }}-${{ hashFiles('.github/workflows/ci.yml') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-apt-
+            ${{ runner.os }}-${{ runner.arch }}-riscv64-apt-
 
       - name: Restore apt package archives
         run: |
