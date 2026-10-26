@@ -348,10 +348,17 @@ jobs:
       - name: Cache apt package archives
         uses: actions/cache@v4
         with:
-          path: /var/cache/apt/archives/*.deb
+          path: ${{ runner.temp }}/apt-cache/*.deb
           key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-apt-
+
+      - name: Restore apt package archives
+        run: |
+          mkdir -p "$RUNNER_TEMP/apt-cache"
+          if compgen -G "$RUNNER_TEMP/apt-cache/*.deb" > /dev/null; then
+            sudo cp -n "$RUNNER_TEMP"/apt-cache/*.deb /var/cache/apt/archives/
+          fi
 
       - name: Download LLVM (Linux)
         run: |
@@ -366,6 +373,9 @@ jobs:
 
       - name: Install riscv64 toolchain and qemu
         run: sudo apt-get install -y qemu-user qemu-user-static gcc-12-riscv64-linux-gnu libc6-riscv64-cross
+
+      - name: Save apt package archives
+        run: sudo cp /var/cache/apt/archives/*.deb "$RUNNER_TEMP/apt-cache/"
 
       - name: Build Odin
         run: ./build_odin.sh release
