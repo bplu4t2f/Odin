@@ -345,6 +345,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache apt package archives
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives/*.deb
+          key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-apt-
+
       - name: Download LLVM (Linux)
         run: |
           wget https://apt.llvm.org/llvm.sh
