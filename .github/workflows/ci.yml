@@ -356,6 +356,9 @@ jobs:
         run: |
           sudo apt-get install libcurl4-openssl-dev libmbedtls-dev
 
+      - name: Install riscv64 toolchain and qemu
+        run: sudo apt-get install -y gcc-12-riscv64-linux-gnu libc6-riscv64-cross
+
       - name: Build Odin
         run: ./build_odin.sh release
 
@@ -378,9 +381,6 @@ jobs:
 
       - name: Odin check examples/all/sdl3
         run: ./odin check examples/all/sdl3 -target:linux_riscv64 -vet -vet-tabs -strict-style -vet-style -warnings-as-errors -disallow-do -no-entry-point
-
-      - name: Install riscv64 toolchain and qemu
-        run: sudo apt-get install -y gcc-12-riscv64-linux-gnu libc6-riscv64-cross
 
       - name: Odin run
         run: ./odin run examples/demo -vet -vet-tabs -strict-style -vet-style -warnings-as-errors -disallow-do -target:linux_riscv64 -extra-linker-flags:"-fuse-ld=/usr/bin/riscv64-linux-gnu-gcc-12 -static -Wl,-static" -no-rpath
