@@ -345,18 +345,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Persist apt package archives across runs because the apt package servers can be slow.
+      # Persist apt package cache across runs.
+      #
+      # This is needed especially for riscv64 because the apt package servers can be slow.
       # On a cache miss, actions/cache saves the configured .deb files at job completion.
       # It restores the exact key if available, otherwise one cache matching the restore-key prefix.
       # Cache entries are immutable, so an exact-key hit will not be updated with new archives.
       # The cache action runs as the runner user, so we use a runner-writable directory
       # "$RUNNER_TEMP/apt-cache/", and copy archives to (and later from) apt's root-owned
       # "/var/cache/apt/archives" directory.
+      # We also want to rotate the key weekly to ensure that we occasionally get a fresh
+      # archive even if ci.yml never changes. This is a bit of a hack, maybe this could be done better.
+      # Note that out of date packages in the cache aren't a problem because apt will automatically
+      # download the newest version if necessary.
+      - name: Get apt cache week
+        id: apt-cache-week
+        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
       - name: Cache apt package archives
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/apt-cache/*.deb
-          key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ steps.apt-cache-week.outputs.week }}-${{ hashFiles('.github/workflows/ci.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-apt-
 
