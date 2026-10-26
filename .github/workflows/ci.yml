@@ -107,10 +107,12 @@ jobs:
       # Note that out of date packages in the cache aren't a problem because apt will automatically
       # download the newest version if necessary.
       - name: Get apt cache week
+        if: matrix.os != 'macos-latest'
         id: apt-cache-week
         run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
 
       - name: Cache apt package archives
+        if: matrix.os != 'macos-latest'
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/apt-cache/*.deb
@@ -119,6 +121,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-apt-
 
       - name: Restore apt package archives
+        if: matrix.os != 'macos-latest'
         run: |
           mkdir -p "$RUNNER_TEMP/apt-cache"
           if compgen -G "$RUNNER_TEMP/apt-cache/*.deb" > /dev/null; then
@@ -164,6 +167,7 @@ jobs:
 
       # Need to save all downloaded apt packages in "$RUNNER_TEMP/apt-cache/" so that actions/checkout@v4 will pick them up
       - name: Save apt package archives
+        if: matrix.os != 'macos-latest'
         run: sudo cp /var/cache/apt/archives/*.deb "$RUNNER_TEMP/apt-cache/"
 
       - name: Build Odin
