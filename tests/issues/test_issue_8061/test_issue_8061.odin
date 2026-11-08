@@ -27,17 +27,20 @@ test_json_edge_cases :: proc(t: ^testing.T) {
 		fmt.printf("%q err=%v value=%v\n", c, err, v)
 	}
 
-	expect(t, "[\"a\x01b\"]", .Invalid_String)
-	expect(t, `["\q"]`, .Invalid_String)
-	expect(t, `[1e]`, .Illegal_Character)
-	expect(t, "[\"\xff\"]", .Invalid_String)
-	expect(t, `["\ud800"]`, .Invalid_String)
-	expect(t, `[1,]`, .Illegal_Character)
-	expect(t, `{"a":1,}`, .Illegal_Character)
-	expect(t, `[01]`, .Invalid_Number)
-	expect(t, `[1.]`, .Invalid_Number)
-	expect(t, "\v[1]", .Illegal_Character)
-	expect(t, "[1]\x00garbage", .Invalid_String)
+	// NOTE: The exact error codes returned for these cases are TBD; the current
+	//       ones are just a first suggestion. The most important bit is that
+	//       they report any error at all.
+	expect(t, "[\"a\x01b\"]",    .Invalid_String)
+	expect(t, `["\q"]`,          .Invalid_String)
+	expect(t, `[1e]`,            .Illegal_Character)
+	expect(t, "[\"\xff\"]",      .Invalid_String)
+	expect(t, `["\ud800"]`,      .Invalid_String)
+	expect(t, `[1,]`,            .Illegal_Character)
+	expect(t, `{"a":1,}`,        .Illegal_Character)
+	expect(t, `[01]`,            .Invalid_Number)
+	expect(t, `[1.]`,            .Invalid_Number)
+	expect(t, "\v[1]",           .Illegal_Character)
+	expect(t, "[1]\x00garbage",  .Invalid_String)
 }
 
 expect :: proc(t: ^testing.T, input: string, expected_error: json.Error, loc := #caller_location) {
